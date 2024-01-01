@@ -1,6 +1,8 @@
 import { createContext,useContext, useEffect, useState } from "react"
 import { onAuthStateChanged,signOut as authSignOut } from "firebase/auth";
 import { auth } from "@/firebase/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebase";
 const UserContext = createContext()
 
 
@@ -11,13 +13,14 @@ export const UserProvider = ({children})=>{
         setCurrentUser(null)
         setIsLoading(false)
     }
-    const authStateChanged = (user)=>{
+    const authStateChanged = async(user)=>{
         setIsLoading(true)
         if(!user){
             clear()
             return
         }
-        setCurrentUser(user)
+        const docData = await getDoc(doc(db,"users",user.uid))
+        setCurrentUser(docData.data())
         setIsLoading(false)
     }
     const signOut = ()=>{

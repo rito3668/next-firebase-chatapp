@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import { signInWithEmailAndPassword ,GoogleAuthProvider,signInWithPopup,FacebookAuthProvider,sendPasswordResetEmail} from 'firebase/auth'
 import { useAuth } from '@/context/authContext'
 import { useRouter } from 'next/router'
-
+import Loader from '@/components/Loader'
 const gProvider = new GoogleAuthProvider();
 const fProvider = new FacebookAuthProvider();
 const Login = () => {
@@ -61,7 +61,7 @@ const Login = () => {
             router.push('/')
         }
     },[currentUser,isLoading])
-  return isLoading || (!isLoading && currentUser)?'Loader...':(
+  return isLoading || (!isLoading && currentUser)?<Loader/>:(
     <div className='h-[100vh] flex justify-center items-center bg-c1'>
         <ToastMessage/>
       <div className='flex items-center flex-col'>
@@ -107,7 +107,7 @@ const Login = () => {
                     autoComplete='off'
                 />
                 <div className='text-right w-full text-c3'>
-                    <span className='cursor-pointer' onClick={resetPassword}>Forgot Password?</span>
+                    <span className='cursor-pointer hover:text-white ease-in duration-100 ' onClick={resetPassword}>Forgot Password?</span>
                 </div>
                 <button className='mt-4 w-full h-14 rounded-xl outline-none text-base font-semibold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500'>Login to your account</button>
             </form>
