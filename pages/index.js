@@ -3,6 +3,7 @@ import React, { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Loader from '@/components/Loader'
 import LeftNav from '@/components/LeftNav'
+import Chats from '@/components/Chats'
 const Home = () => {
   const {signOut,currentUser,isLoading} = useAuth()
   const router = useRouter()
@@ -20,7 +21,11 @@ const Home = () => {
       <div className="flex w-full shrink-0">
         <LeftNav/>
         <div className="flex bg-c2 grow">
-          <div>Sidebar</div>
+          <div className='w-[400px] p-5 overflow-auto scrollbar shrink-0 border-r border-white/[0.05]'>
+            <div className='flex flex-col h-full'>
+              <Chats/>
+            </div>
+          </div>
           <div>Chat</div>
         </div>
       </div>
