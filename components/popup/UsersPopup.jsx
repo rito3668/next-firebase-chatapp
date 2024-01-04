@@ -5,6 +5,7 @@ import { useChatContext } from '@/context/chatContext'
 import Avatar from '../Avatar'
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/firebase/firebase'
+import Search from '../Search'
 const UsersPopup = (props) => {
   const {currentUser} = useAuth()
   const {users,dispatch} = useChatContext()
@@ -45,15 +46,17 @@ const UsersPopup = (props) => {
         })
       }else{
         //does not exist
-        dispatch({type:'CHANGE_USER',payload:user})
-        props.onHide()
+        
       }
+      dispatch({type:'CHANGE_USER',payload:user})
+        props.onHide()
     } catch (error) {
         console.log(error)
     }
   } 
   return (
     <PopupWrapper {...props}>
+      <Search/>
       <div className='mt-5 flex flex-col gap-2 grow relative overflow-auto scrollbar'>
         <div className='absolute w-full'>
           {users && Object.values(users).map((user)=>(
