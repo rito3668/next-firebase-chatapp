@@ -9,10 +9,13 @@ import { formatDate } from '@/utils/helpers'
 import ImageViewer from 'react-simple-image-viewer'
 import { Timestamp } from 'firebase/firestore'
 import { wrapEmojisInHtmlTag } from '@/utils/helpers'
+import MessageMenu from './MessageMenu'
 import Icon from './Icon'
+import DeleteMsgPopup from './popup/DeleteMsgPopup'
 const Message = ({message}) => {
     const {currentUser} = useAuth()
     const [showMenu,setShowMenu] = useState(false)
+    const [showDeletePopup,setShowDeletePopup] = useState(false)
     const self = message.sender === currentUser.uid
     const {users,data,imageViewer,setImageViewer} = useChatContext()
     const timestamp = new Timestamp(
@@ -22,6 +25,13 @@ const Message = ({message}) => {
     const date = timestamp.toDate()
   return (
     <div className={`mb-5 max-w-[75%] ${self?"self-end":""}`}>
+        <DeleteMsgPopup
+            onHide={()=>setShowDeletePopup(false)}
+            className="DeleteMsgPopup"
+            noHeader={true}
+            shortHeight={true}
+            self={self}
+        />
       <div className={`flex items-end gap-3 mb-1 ${self?"justify-start flex-row-reverse":""}`}>
         <Avatar
             size='small'
@@ -62,12 +72,19 @@ const Message = ({message}) => {
                     }
                 </>
             )}
-            <div className={`${showMenu?"":"hidden"} group-hover:flex absolute top-2 ${self?"left-2 bg-c5":"right-2 bg-c1"}`}>
+            <div className={`${showMenu?"":"hidden"} group-hover:flex absolute top-2 ${self?"left-2 bg-c5":"right-2 bg-c1"}`} onClick={()=>setShowMenu(true)}>
                 <Icon
                     size="medium"
                     className="hover:bg-inherit rounded-none"
                     icon={<GoChevronDown size={24} className='text-c3'/>}
                 />
+                {
+                    showMenu && (<MessageMenu
+                    self={self}
+                    setShowMenu={setShowMenu}
+                    showMenu={showMenu}  
+                />
+                )}
             </div>
         </div>
         </div>
