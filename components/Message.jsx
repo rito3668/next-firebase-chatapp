@@ -19,7 +19,7 @@ const Message = ({message}) => {
     const [showMenu,setShowMenu] = useState(false)
     const [showDeletePopup,setShowDeletePopup] = useState(false)
     const self = message.sender === currentUser.uid
-    const {users,data,imageViewer,setImageViewer} = useChatContext()
+    const {users,data,imageViewer,setImageViewer,editMsg,setEditMsg} = useChatContext()
     const timestamp = new Timestamp(
         message?.date?.seconds,
         message?.date?.nanoseconds
@@ -123,6 +123,7 @@ const Message = ({message}) => {
                     setShowMenu={setShowMenu}
                     showMenu={showMenu}  
                     deletePopupHandler={deletePopupHandler}
+                    setEditMsg={()=>setEditMsg(message)}
                 />
                 )}
             </div>

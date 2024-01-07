@@ -1,17 +1,40 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useChatContext } from '@/context/chatContext'
-import { collection, onSnapshot,doc, Timestamp } from 'firebase/firestore'
+import { collection, onSnapshot,doc, Timestamp, query, where } from 'firebase/firestore'
 import { db } from '@/firebase/firebase'
 import { RiSearch2Line } from 'react-icons/ri'
 import Avatar from './Avatar'
 import { formatDate } from '@/utils/helpers'
 import { useAuth } from '@/context/authContext'
 const Chats = () => {
-    const {users,setUsers,chats,setChats,selectedChat,setSelectedChat,dispatch} = useChatContext()
+    const {users,setUsers,chats,setChats,selectedChat,setSelectedChat,dispatch,chatId,data} = useChatContext()
     const [search,setSearch] = useState("")
+    const [unreadMsgs,setUnreadMsgs] = useState({})
     const {currentUser} = useAuth()
     const isBlockExecutedRef= useRef(false)
     const isUsersFetchedRef = useRef(false)
+    useEffect(()=>{
+        const documentIds = Object.keys(chats)
+        if(documentIds.length === 0)return
+        const q = query(collection(db,"chats"),where("__name__","in",documentIds))
+        const unsub = onSnapshot(q,(snapshot)=>{
+            let msgs={}
+            snapshot.forEach((doc)=>{
+                if(doc.id !== data.chatId){
+                    msgs[doc.id]  = doc.data().messages.filter((m)=>{
+                        m?.read === false && m?.sender !== currentUser?.uid
+                    })
+                }  
+                Object.keys(msgs || {})?.map(c=>{
+                    if(msgs[c]?.length < 1){
+                         delete msgs[c]
+                    }
+                }) 
+            })
+            setUnreadMsgs(msgs)
+        })
+        return ()=>unsub()
+    },[chats,selectedChat])
     useEffect(()=>{
         const unsub = onSnapshot(collection(db,"users"),
         (snapshot)=>{
@@ -46,6 +69,7 @@ const Chats = () => {
         }
         currentUser.uid && getChats()
     },[isBlockExecutedRef.current,users])
+    
     const handleSelect =async(user,selectedChatId)=>{
         setSelectedChat(user)
         dispatch({type:'CHANGE_USER',payload:user})
@@ -91,7 +115,7 @@ const Chats = () => {
                             <p className='text-sm text-c3 line-clamp-1 break-all'>{
                                 chat[1]?.lastMessage?.text ||(chat[1]?.lastMessage?.img && "image") || "Send first message"
                             }</p>
-                            <span className='absolute right-0 top-7 min-w-[20px] h-5 rounded-full bg-red-500 flex justify-center items-center text-sm'>5</span>
+                            { !!unreadMsgs?.[chat[0]]?.length  && (<span className='absolute right-0 top-7 min-w-[20px] h-5 rounded-full bg-red-500 flex justify-center items-center text-sm'>{unreadMsgs?.[chat[0]]?.length} </span>)}
                         </div>
                     </li>
             )

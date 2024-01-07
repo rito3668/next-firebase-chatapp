@@ -8,9 +8,10 @@ import ClickAwayListener from 'react-click-away-listener'
 import { useChatContext } from '@/context/chatContext'
 import { IoClose } from 'react-icons/io5'
 import { MdDeleteForever } from 'react-icons/md'
+import { data } from 'autoprefixer'
 const ChatFooter = () => {
     const [showEmojiPicker,setShowEmojiPicker] = useState(false)
-    const {isTyping,editMsg,setEditMsg,inputText,setInputText,setAttachment,setAttachmentPreview,attachmentPreview} =useChatContext()
+    const {isTyping,editMsg,setEditMsg,inputText,setInputText,setAttachment,setAttachmentPreview,attachmentPreview,data} =useChatContext()
     const onEmojiClick = (emojiData,event)=>{   
         let text = inputText
         setInputText((text += emojiData.emoji))
@@ -82,7 +83,7 @@ const onFileChange = (e)=>{
         isTyping && (
             <div className='absolute -top-6 left-4 bg-c2 w-full h-6'>
                 <div className='flex gap-2 w-full h-full opacity-50 text-sm text-white'>
-                    {`User is typing`}
+                    {`${data?.user?.displayName} is typing`}
                     <img src='/typing.svg'/>
                 </div>
             </div>
