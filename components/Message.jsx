@@ -7,11 +7,13 @@ import Image from 'next/image'
 import ReactSimpleImageViewer from 'react-simple-image-viewer'
 import { formatDate } from '@/utils/helpers'
 import ImageViewer from 'react-simple-image-viewer'
-import { Timestamp } from 'firebase/firestore'
+import { Timestamp, doc, updateDoc,getDoc } from 'firebase/firestore'
 import { wrapEmojisInHtmlTag } from '@/utils/helpers'
 import MessageMenu from './MessageMenu'
 import Icon from './Icon'
 import DeleteMsgPopup from './popup/DeleteMsgPopup'
+import { db } from '@/firebase/firebase'
+import { DELETED_FOR_EVERYONE, DELETED_FOR_ME } from '@/utils/constant'
 const Message = ({message}) => {
     const {currentUser} = useAuth()
     const [showMenu,setShowMenu] = useState(false)
@@ -23,15 +25,52 @@ const Message = ({message}) => {
         message?.date?.nanoseconds
     )
     const date = timestamp.toDate()
+    const deletePopupHandler = ()=>{
+        setShowDeletePopup(true)
+        setShowMenu(false)
+    }
+    const deleteMessage =async(action)=>{
+        try {
+            const messageId = message.id
+            const chatRef = doc(db,"chats",data.chatId)
+            const chatDoc = await getDoc(chatRef)
+            const updatedMessages =  chatDoc.data().messages.map((message)=>{
+                if(message.id === messageId){
+                    if(action===DELETED_FOR_ME){
+                        message.deletedInfo={
+                            [currentUser.uid]:DELETED_FOR_ME
+                        }
+                    }
+                    if(action===DELETED_FOR_EVERYONE){
+                        message.deletedInfo={
+                            deletedForEveryone : true
+                        }
+                    }
+                }   
+                return message 
+            })
+            await updateDoc(chatRef,{
+                messages:updatedMessages
+            })
+            setShowDeletePopup(false)
+        } catch (error) {
+            console.error(error)
+        }
+    }
   return (
     <div className={`mb-5 max-w-[75%] ${self?"self-end":""}`}>
-        <DeleteMsgPopup
-            onHide={()=>setShowDeletePopup(false)}
-            className="DeleteMsgPopup"
-            noHeader={true}
-            shortHeight={true}
-            self={self}
-        />
+        {
+            showDeletePopup &&(
+                <DeleteMsgPopup
+                onHide={()=>setShowDeletePopup(false)}
+                className="DeleteMsgPopup"
+                noHeader={true}
+                shortHeight={true}
+                self={self}
+                deleteMessage={deleteMessage}
+                />
+            )
+        }
       <div className={`flex items-end gap-3 mb-1 ${self?"justify-start flex-row-reverse":""}`}>
         <Avatar
             size='small'
@@ -83,6 +122,7 @@ const Message = ({message}) => {
                     self={self}
                     setShowMenu={setShowMenu}
                     showMenu={showMenu}  
+                    deletePopupHandler={deletePopupHandler}
                 />
                 )}
             </div>
