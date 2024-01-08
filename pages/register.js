@@ -15,8 +15,21 @@ const Register = () => {
     const {currentUser,isLoading} = useAuth()
     const router = useRouter()
     const signInWithGoogle = async()=>{
+       
         try {
-           await signInWithPopup(auth,gProvider)
+           const {user} =  await signInWithPopup(auth,gProvider)
+           const colIndex = Math.floor(Math.random()*profileColors.length)
+           await setDoc(doc(db,"users",user.uid),{
+            uid:user.uid,
+            displayName:user.displayName,
+            email:user.email,
+            color:profileColors[colIndex]
+        })
+            await setDoc(doc(db,"userChats",user.uid),{})
+            await updateProfile(user,{
+                displayName:user.displayName
+            })
+            router.push('/')
         } catch (error) {
             console.error(error)
         }
