@@ -16,6 +16,13 @@ export const ChatContextProvider = ({children})=>{
         chatId:"",
         user:null
     }
+    const resetFooterStates = ()=>{
+        setInputText('')
+        setAttachment(null)
+        setAttachmentPreview(null)
+        setEditMsg(null)
+        setImageViewer(null)
+    }
     const chatReducer = (state,action)=>{
         switch(action.type){
             case "CHANGE_USER":
@@ -29,7 +36,7 @@ export const ChatContextProvider = ({children})=>{
     }
     const [state,dispatch] = useReducer(chatReducer,INITIAL_STATE)
     return(
-        <ChatContext.Provider value={{users,setUsers,dispatch,data:state,chats,setChats,selectedChat,setSelectedChat,inputText,setInputText,attachment,setAttachment,attachmentPreview,setAttachmentPreview,editMsg,setEditMsg,isTyping,setIsTyping,imageViewer,setImageViewer}}>
+        <ChatContext.Provider value={{users,setUsers,dispatch,data:state,chats,setChats,selectedChat,setSelectedChat,inputText,setInputText,attachment,setAttachment,attachmentPreview,setAttachmentPreview,editMsg,setEditMsg,isTyping,setIsTyping,imageViewer,setImageViewer,resetFooterStates}}>
             {children}
         </ChatContext.Provider>
     )

@@ -1,40 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useChatContext } from '@/context/chatContext'
-import { collection, onSnapshot,doc, Timestamp, query, where } from 'firebase/firestore'
+import { collection, onSnapshot,doc, Timestamp, query, where, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/firebase/firebase'
 import { RiSearch2Line } from 'react-icons/ri'
 import Avatar from './Avatar'
 import { formatDate } from '@/utils/helpers'
 import { useAuth } from '@/context/authContext'
 const Chats = () => {
-    const {users,setUsers,chats,setChats,selectedChat,setSelectedChat,dispatch,chatId,data} = useChatContext()
+    const {users,setUsers,chats,setChats,selectedChat,setSelectedChat,dispatch,data} = useChatContext()
     const [search,setSearch] = useState("")
     const [unreadMsgs,setUnreadMsgs] = useState({})
     const {currentUser} = useAuth()
     const isBlockExecutedRef= useRef(false)
     const isUsersFetchedRef = useRef(false)
-    useEffect(()=>{
-        const documentIds = Object.keys(chats)
-        if(documentIds.length === 0)return
-        const q = query(collection(db,"chats"),where("__name__","in",documentIds))
-        const unsub = onSnapshot(q,(snapshot)=>{
-            let msgs={}
-            snapshot.forEach((doc)=>{
-                if(doc.id !== data.chatId){
-                    msgs[doc.id]  = doc.data().messages.filter((m)=>{
-                        m?.read === false && m?.sender !== currentUser?.uid
-                    })
-                }  
-                Object.keys(msgs || {})?.map(c=>{
-                    if(msgs[c]?.length < 1){
-                         delete msgs[c]
-                    }
-                }) 
-            })
-            setUnreadMsgs(msgs)
-        })
-        return ()=>unsub()
-    },[chats,selectedChat])
+    
     useEffect(()=>{
         const unsub = onSnapshot(collection(db,"users"),
         (snapshot)=>{
@@ -48,8 +27,37 @@ const Chats = () => {
                 isUsersFetchedRef.current = true
             }
         })
-
+        return unsub
     },[])
+    useEffect(() => {
+        const documentIds = Object.keys(chats);
+        if (documentIds.length === 0) return;
+        const q = query(
+            collection(db, "chats"),
+            where("__name__", "in", documentIds)
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            let msgs = {};
+            snapshot.forEach((doc) => {
+                if (doc.id !== data.chatId) {
+                    msgs[doc.id] = doc
+                        .data()
+                        .messages?.filter(
+                            (m) =>
+                                m?.read === false &&
+                                m.sender !== currentUser.uid
+                        );
+                }
+                Object.keys(msgs || {}).map((c) => {
+                    if (msgs[c]?.length < 1) {
+                        delete msgs[c];
+                    }
+                });
+            });
+            setUnreadMsgs(msgs)
+        });
+        return unsubscribe;
+    }, [chats, selectedChat]);
     useEffect(()=>{
         const getChats = ()=>{
             const unsub = onSnapshot(doc(db,"userChats",currentUser.uid),(doc)=>{
@@ -66,13 +74,29 @@ const Chats = () => {
                     }
                 }
             })
+            return unsub
         }
         currentUser.uid && getChats()
     },[isBlockExecutedRef.current,users])
-    
+    const readChat = async(chatId)=>{
+        const chatRef = doc(db,"chats",chatId)
+        const chatDoc = await getDoc(chatRef)
+        let updatedMessages = chatDoc.data().messages.map(m=>{
+            if(m?.read === false){
+                m.read = true
+            }
+            return m
+        })
+        await updateDoc(chatRef,{
+            messages:updatedMessages
+        })
+    }
     const handleSelect =async(user,selectedChatId)=>{
         setSelectedChat(user)
         dispatch({type:'CHANGE_USER',payload:user})
+        if(unreadMsgs?.[selectedChatId]?.length>0){
+            readChat(selectedChatId)
+        }
     }
     const filteredChats = Object.entries(chats || {})
         .filter(
