@@ -7,13 +7,15 @@ import Avatar from './Avatar'
 import { formatDate } from '@/utils/helpers'
 import { useAuth } from '@/context/authContext'
 const Chats = () => {
-    const {users,setUsers,chats,setChats,selectedChat,setSelectedChat,dispatch,data} = useChatContext()
+    const {users,setUsers,chats,setChats,selectedChat,setSelectedChat,dispatch,data,resetFooterStates} = useChatContext()
     const [search,setSearch] = useState("")
     const [unreadMsgs,setUnreadMsgs] = useState({})
     const {currentUser} = useAuth()
     const isBlockExecutedRef= useRef(false)
     const isUsersFetchedRef = useRef(false)
-    
+    useEffect(()=>{
+        resetFooterStates()
+    },[data?.chatId])
     useEffect(()=>{
         const unsub = onSnapshot(collection(db,"users"),
         (snapshot)=>{
@@ -65,10 +67,12 @@ const Chats = () => {
                     const data = doc.data()
                     setChats(data)
                     if(!isBlockExecutedRef.current && isUsersFetchedRef.current && users){
-                        const firstChat = Object.values(data).sort((a,b)=>b.date - a.date)[0]
+                        const firstChat = Object.values(data).filter(chat=>!chat.hasOwnProperty("chatDeleted")).sort((a,b)=>b.date - a.date)[0]
                         if(firstChat){
                             const user = users[firstChat?.userInfo?.uid]
                             handleSelect(user)
+                            const chatId = currentUser.uid>user.uid?currentUser.uid+user.uid:user.uid+currentUser.uid
+                            readChat(chatId)
                         }
                         isBlockExecutedRef.current = true
                     }
@@ -99,7 +103,8 @@ const Chats = () => {
         }
     }
     const filteredChats = Object.entries(chats || {})
-        .filter(
+    .filter(([,chat])=>!chat.hasOwnProperty("chatDeleted"))    
+    .filter(
             ([,chat])=>chat?.userInfo?.displayName
                     .toLowerCase().includes(search.toLowerCase())||chat?.lastMessage?.
                     text.toLowerCase().includes(search.toLowerCase())

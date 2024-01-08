@@ -1,5 +1,5 @@
 import { db } from '@/firebase/firebase'
-import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
+import { collection, deleteField, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
 import React, { useState } from 'react'
 import {RiSearch2Line} from 'react-icons/ri'
 import Avatar from './Avatar'
@@ -69,7 +69,9 @@ const Search = () => {
             })
           }else{
             //does not exist
-            
+            await updateDoc(doc(db,"userChats",currentUser.uid),{
+              [combinedId+".chatDeleted"]:deleteField()
+            })
           }
           setUser(null)
           setUsername("")

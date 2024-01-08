@@ -1,6 +1,6 @@
 import { useChatContext } from '@/context/chatContext'
 import { db, storage } from '@/firebase/firebase'
-import { Timestamp, arrayUnion, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { Timestamp, arrayUnion, deleteField, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import React, { useEffect } from 'react'
 import {v4 as uuid} from 'uuid'
 import {TbSend} from 'react-icons/tb'
@@ -91,7 +91,8 @@ const Composebar = () => {
         })
         await updateDoc(doc(db,"userChats",data.user.uid),{
             [data.chatId+".lastMessage"]:msg,
-            [data.chatId+".date"]:serverTimestamp()
+            [data.chatId+".date"]:serverTimestamp(),
+            [data.chatId+".chatDeleted"]:deleteField()
         })
         setInputText("")
         setAttachment(null)

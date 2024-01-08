@@ -30,7 +30,7 @@ const Messages = () => {
     <div ref={ref} className='grow p-5 overflow-auto scrollbar flex flex-col'>
         {
             messages?.filter((m)=>{
-                return m?.deletedInfo?.[currentUser.uid] !== DELETED_FOR_ME && !m.deletedInfo?.deletedForEveryone && !m?.deletedInfo?.[currentUser.uid]
+                return m?.deletedInfo?.[currentUser.uid] !== DELETED_FOR_ME && !m.deletedInfo?.deletedForEveryone && !m?.deleteChatInfo?.[currentUser.uid]
             })?.map((m)=>{
                 return <Message message={m} key={m.id}/>
 })
